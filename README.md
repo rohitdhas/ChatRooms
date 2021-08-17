@@ -1,1 +1,1 @@
-## Simple User Authentication using Node and Passport JS
+## It's a ChatRooms App, being built using MERN stack
