@@ -1,3 +1,4 @@
+require("dotenv").config();
 const mongoose = require("mongoose");
 const express = require("express");
 const cors = require("cors");
@@ -7,20 +8,20 @@ const bcrypt = require("bcrypt");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const app = express();
-const User = require("./models/user");
+const User = require("./models/UserSchema");
 // _____________________END OF IMPORTS_____________________
 
 // Database
-const dbURI =
-  "mongodb+srv://<username>:<password>@userauthentication.niie7.mongodb.net/users?retryWrites=true&w=majority";
-mongoose.connect(
-  dbURI,
-  {
+const dbURI = process.env.MONGO_LOCAL_URI;
+
+mongoose
+  .connect(dbURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-  },
-  () => console.log("Mongoose is connected!")
-);
+  })
+  .then(() => console.log("Mongoose Connected!"))
+  .catch((err) => console.log(err));
+
 // _____________________END OF DATABASE_____________________
 
 // Middlewares
@@ -28,7 +29,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.CLIENT_URL,
     credentials: true,
   })
 );
@@ -42,7 +43,7 @@ app.use(
 app.use(cookieParser("secret"));
 app.use(passport.initialize());
 app.use(passport.session());
-const passportInit = require("../passportConfig");
+const passportInit = require("./passportConfig");
 passportInit(passport);
 // _____________________END OF MIDDLEWARES_____________________
 
@@ -62,23 +63,24 @@ app.post("/login", (req, res, next) => {
 });
 
 app.post("/register", (req, res) => {
-  User.findOne({ username: req.body.username }, async (err, doc) => {
+  const { username, password } = req.body;
+
+  User.findOne({ username }, async (err, doc) => {
     if (err) console.log(err);
     if (doc) res.send("User already exist!");
     else {
-      const hashedPassword = await bcrypt.hash(req.body.password, 10);
+      const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = User({
-        username: req.body.username,
+        username,
         password: hashedPassword,
       });
       await newUser.save();
-      res.send("User Created✅");
+      res.send({
+        message: "User Created✅",
+        data: { username, hashedPassword },
+      });
     }
   });
-});
-
-app.get("/user", (req, res) => {
-  res.send(req.user);
 });
 
 // _____________________END OF Routes_____________________
