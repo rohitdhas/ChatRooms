@@ -6,7 +6,6 @@ const passport = require("passport");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const session = require("express-session");
-const bodyParser = require("body-parser");
 const app = express();
 const User = require("./models/UserSchema");
 // _____________________END OF IMPORTS_____________________
@@ -25,8 +24,8 @@ mongoose
 // _____________________END OF DATABASE_____________________
 
 // Middlewares
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: process.env.CLIENT_URL,
