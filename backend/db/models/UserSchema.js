@@ -9,10 +9,9 @@ const User = new mongoose.Schema({
     type: String,
     required: true,
   },
-  room_id: {
-    type: Array,
-    required: true,
-  },
+  rooms: [
+    {type: Schema.Types.ObjectId, ref: 'Room', required: true,},
+  ],
   conversation_id: {
     type: Array,
     required: true,

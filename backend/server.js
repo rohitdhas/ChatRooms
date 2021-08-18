@@ -6,20 +6,13 @@ const passport = require("passport");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const session = require("express-session");
+const User = require("./db/models/UserSchema");
 const app = express();
-const User = require("./models/UserSchema");
-// _____________________END OF IMPORTS_____________________
+const authRouter = require("./controllers/auth");
 
 // Database
-const dbURI = process.env.MONGO_LOCAL_URI;
 
-mongoose
-  .connect(dbURI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("Mongoose Connected!"))
-  .catch((err) => console.log(err));
+require('./db/dbConfig');
 
 // _____________________END OF DATABASE_____________________
 
@@ -32,6 +25,7 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(
   session({
     secret: "secret",
@@ -47,40 +41,7 @@ passportInit(passport);
 // _____________________END OF MIDDLEWARES_____________________
 
 // Routes
-
-app.post("/login", (req, res, next) => {
-  passport.authenticate("local", (err, user, info) => {
-    if (err) throw err;
-    if (!user) res.send(info.message);
-    else {
-      req.logIn(user, (err) => {
-        if (err) throw err;
-        res.send("Successfully Authenticated✅");
-      });
-    }
-  })(req, res, next);
-});
-
-app.post("/register", (req, res) => {
-  const { username, password } = req.body;
-
-  User.findOne({ username }, async (err, doc) => {
-    if (err) console.log(err);
-    if (doc) res.send("User already exist!");
-    else {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser = User({
-        username,
-        password: hashedPassword,
-      });
-      await newUser.save();
-      res.send({
-        message: "User Created✅",
-        data: { username, hashedPassword },
-      });
-    }
-  });
-});
+app.use('/auth', authRouter);
 
 // _____________________END OF Routes_____________________
 
